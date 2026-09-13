@@ -1,33 +1,42 @@
+import pickle
+import numpy as np
+
+# Load once at import time — not on every request
+with open("model.pkl", "rb") as f:
+    model = pickle.load(f)
+
+with open("encoder.pkl", "rb") as f:
+    le = pickle.load(f)
+
 def score(mode, amount, merchant_known, device_known, location_match):
 
-    base = 0.0
+    # Encode mode
+    mode_encoded = int(le.transform([mode])[0])
 
-    if mode == "qr":
-        base += 0.15
-    elif mode == "upi":
-        base += 0.10
-    elif mode == "nfc":
-        base += 0.05
-    elif mode == "card":
-        base += 0.10
+    # Build interaction terms — must match train_model.py exactly
+    mode_x_amount    = mode_encoded * amount
+    mode_x_merchant  = mode_encoded * int(merchant_known)
+    mode_x_location  = mode_encoded * int(location_match)
+    amount_x_merchant = amount * int(merchant_known)
+    amount_x_device   = amount * int(device_known)
 
-    if amount > 10000:
-        base += 0.20
+    features = [[
+        mode_encoded,
+        amount,
+        int(merchant_known),
+        int(device_known),
+        int(location_match),
+        mode_x_amount,
+        mode_x_merchant,
+        mode_x_location,
+        amount_x_merchant,
+        amount_x_device
+    ]]
 
-    if amount > 40000:
-        base += 0.20
+    # Get fraud probability (column 1 = P(fraud))
+    risk_score = float(model.predict_proba(features)[0][1])
 
-    if not merchant_known:
-        base += 0.20
-
-    if not device_known:
-        base += 0.15
-
-    if not location_match:
-        base += 0.15
-
-    risk_score = min(base, 1.0)
-
+    # Map to auth tier
     if risk_score < 0.15:
         tier = "trivial"
     elif risk_score < 0.40:
