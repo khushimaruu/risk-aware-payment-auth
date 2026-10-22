@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.metrics import classification_report
 import pickle
+import matplotlib.pyplot as plt  
 
 # ── Load test data ────────────────────────────────────────
 df = pd.read_csv("transactions.csv")
@@ -82,4 +83,17 @@ for name, preds in [("Flat MFA", y_flat), ("Amount-only RBA", y_amount), ("Mode-
     r = recall_score(y_true, preds, zero_division=0)
     f = f1_score(y_true, preds, zero_division=0)
     print(f"{name:<22} Precision: {p:.3f}  Recall: {r:.3f}  F1: {f:.3f}")
-    
+
+
+import matplotlib.pyplot as plt   
+systems = ['Flat MFA', 'Amount-only RBA', 'Mode-Aware XGBoost']   
+precision = [0.256, 0.312, 0.369]   
+recall    = [0.741, 0.672, 0.763]   
+f1        = [0.380, 0.426, 0.497]   
+x = range(len(systems))   
+plt.figure(figsize=(8,5))  
+plt.bar([i-0.25 for i in x], precision, 0.25, label='Precision')  
+plt.bar([i for i in x], recall, 0.25, label='Recall')   
+plt.bar([i+0.25 for i in x], f1, 0.25, label='F1-Score')  
+plt.xticks(x, systems); plt.ylim(0,1); plt.legend(); plt.tight_layout()  
+plt.savefig('baseline_chart.png', dpi=150)

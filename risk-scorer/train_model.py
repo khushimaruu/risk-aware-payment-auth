@@ -77,3 +77,11 @@ with open("encoder.pkl", "wb") as f:
     pickle.dump(le, f)
 
 print("\nSaved: model.pkl, encoder.pkl")
+
+import matplotlib.pyplot as plt   
+feats = list(importances.keys())   
+vals  = list(importances.values())   
+plt.figure(figsize=(8,5))  
+plt.barh(feats, vals, color=['#2E75B6' if 'x' in f else "#070070" for f in feats])
+plt.xlabel('Importance Score'); plt.tight_layout()  
+plt.savefig('feature_importance.png', dpi=150) 
